@@ -143,7 +143,7 @@ class TestMain(unittest.TestCase):
         are_unique, titles = post_titles_unique(self.valid_posts)
         self.assertEqual(get_duplicates(titles), [])
         are_unique, titles = post_titles_unique(self.duplicated_posts)
-        self.assertTrue(len(get_duplicates(titles)) == 1)
+        self.assertTrue(get_duplicates(titles) == ["Title 1"])
 
     def test_distance_Haversine(self):
         cracow = [50.049683, 19.944544]

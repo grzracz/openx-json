@@ -12,3 +12,4 @@ __pycache__/
 
 # due to using pytest
 .cache
+.coverage
