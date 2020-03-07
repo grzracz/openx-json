@@ -6,6 +6,12 @@ from numpy import unique, radians, sin, cos, arcsin, sqrt
 
 
 def get_data_from_url(url):
+    """
+    Returns dict with data parsed from JSON code
+    On failure: returns None
+    :param url: source
+    :return: data dict
+    """
     try:
         with urlopen(url) as url:
             return json.loads(url.read().decode())
@@ -16,6 +22,13 @@ def get_data_from_url(url):
 
 
 def get_user_by_id(users, user_id):
+    """
+    Returns user dict with given user id
+    On failure: returns None
+    :param users: list of all users to search through
+    :param user_id: user identifier
+    :return: user dict
+    """
     try:
         return next((user for user in users if user["id"] == user_id), None)
     except KeyError as e:
@@ -25,6 +38,12 @@ def get_user_by_id(users, user_id):
 
 
 def assign_posts_to_users(users, posts):
+    """
+    Appends posts to the dict of their user at user["posts"]
+    :param users: list of all users
+    :param posts: list of all posts
+    :return: status bool
+    """
     user_posts = defaultdict(list)
     no_errors = True
     for post in posts:
@@ -40,6 +59,11 @@ def assign_posts_to_users(users, posts):
 
 
 def get_users_posts_amount_string_list(users):
+    """
+    Returns a list of formatted strings about the amount of posts made by each user
+    :param users: list of all users
+    :return: string list
+    """
     string_list = []
     for user in users:
         try:
@@ -51,6 +75,12 @@ def get_users_posts_amount_string_list(users):
 
 
 def post_titles_unique(posts):
+    """
+    Checks if all posts have unique titles
+    On failure: returns None, None
+    :param posts: list of all posts
+    :return: bool, list of post titles
+    """
     try:
         post_titles = [post["title"] for post in posts]
         return unique(post_titles).size == len(posts), post_titles
@@ -61,16 +91,39 @@ def post_titles_unique(posts):
 
 
 def get_duplicates(object_list):
+    """
+    Returns all duplicates of objects in a given list
+    :param object_list: list of objects
+    :return: list of duplicates
+    """
     return [item for item, count in Counter(object_list).items() if count > 1]
 
 
 def distance_Haversine(first_latitude, first_longitude, second_latitude, second_longitude):
-    lat1, lng1, lat2, lng2 = map(radians, [float(first_latitude), float(first_longitude), float(second_latitude), float(second_longitude)])
-    distance_in_km = 12734 * arcsin(sqrt(sin((lat2 - lat1) / 2.0) ** 2 + cos(lat1) * cos(lat2) * sin((lng2 - lng1) / 2.0) ** 2))
+    """
+    Calculates the distance between two coordinates in km using Haversine formula
+    :param first_latitude
+    :param first_longitude
+    :param second_latitude
+    :param second_longitude
+    :return: float distance
+    """
+    lat1, lng1, lat2, lng2 = map(radians,
+                                 [float(first_latitude),
+                                  float(first_longitude),
+                                  float(second_latitude),
+                                  float(second_longitude)])
+    distance_in_km = 12734 * arcsin(sqrt(sin((lat2 - lat1) / 2.0) ** 2 +
+                                         cos(lat1) * cos(lat2) * sin((lng2 - lng1) / 2.0) ** 2))
     return distance_in_km
 
 
 def assign_closest_user_to_users(users):
+    """
+    Appends the id of the closest user to the dict of each user at user["closestUserId"]
+    :param users: list of all users
+    :return: status bool
+    """
     no_errors = True
     for user in users:
         min_distance = 20040
@@ -102,15 +155,12 @@ def assign_closest_user_to_users(users):
 def main(args=None):
     posts = get_data_from_url("https://jsonplaceholder.typicode.com/posts")
     users = get_data_from_url("https://jsonplaceholder.typicode.com/users")
-    print(users)
-    for user in users:
-        print(user["address"]["geo"])
+
     assign_posts_to_users(users, posts)
 
     for string in get_users_posts_amount_string_list(users):
         print(string)
 
-    print()
     all_unique, titles = post_titles_unique(posts)
     if all_unique:
         print("Wszystkie tytuły postów są unikalne")
