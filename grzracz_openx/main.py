@@ -16,25 +16,21 @@ def get_data_from_url(url):
         with urlopen(url) as url:
             return json.loads(url.read().decode())
     except URLError as e:
-        print("Something went wrong while trying to connect to:", url)
-        print("Error:", e)
-        return None
+        raise URLError("Can't connect to: " + str(url) + ' ' + str(e.reason))
 
 
 def get_user_by_id(users, user_id):
     """
     Returns user dict with given user id
-    On failure: returns None
+    On failure (bad users list): raises KeyError
     :param users: list of all users to search through
     :param user_id: user identifier
-    :return: user dict
+    :return: user dict or None if not found
     """
     try:
         return next((user for user in users if user["id"] == user_id), None)
     except KeyError as e:
-        print("Some users are invalid, can not continue")
-        print("Error: Invalid key", e)
-        return None
+        raise KeyError("Error: Bad users list: Invalid key" + str(e))
 
 
 def assign_posts_to_users(users, posts):
@@ -62,22 +58,24 @@ def get_users_posts_amount_string_list(users):
     """
     Returns a list of formatted strings about the amount of posts made by each user
     :param users: list of all users
-    :return: string list
+    :return: string list, status bool
     """
     string_list = []
+    no_errors = True
     for user in users:
         try:
             string_list.append(str(user["username"]) + " napisał(a) " + str(len(user["posts"])) + " postów")
         except KeyError as e:
             print("User invalid, ignoring:\n", user)
             print("Error: Invalid key", e)
-    return string_list
+            no_errors = False
+    return string_list, no_errors
 
 
 def post_titles_unique(posts):
     """
     Checks if all posts have unique titles
-    On failure: returns None, None
+    On failure: raises KeyError
     :param posts: list of all posts
     :return: bool, list of post titles
     """
@@ -85,9 +83,7 @@ def post_titles_unique(posts):
         post_titles = [post["title"] for post in posts]
         return unique(post_titles).size == len(posts), post_titles
     except KeyError as e:
-        print("Some posts are invalid, can not continue")
-        print("Error: Invalid key", e)
-        return None, None
+        raise KeyError("Error: Bad posts list: Invalid key" + str(e))
 
 
 def get_duplicates(object_list):
@@ -153,27 +149,33 @@ def assign_closest_user_to_users(users):
 
 
 def main(args=None):
-    posts = get_data_from_url("https://jsonplaceholder.typicode.com/posts")
-    users = get_data_from_url("https://jsonplaceholder.typicode.com/users")
-
-    assign_posts_to_users(users, posts)
-
-    for string in get_users_posts_amount_string_list(users):
-        print(string)
-
-    all_unique, titles = post_titles_unique(posts)
-    if all_unique:
-        print("Wszystkie tytuły postów są unikalne")
+    try:
+        posts = get_data_from_url("https://jsonplaceholder.typicode.com/posts")
+        users = get_data_from_url("https://jsonplaceholder.typicode.com/users")
+    except URLError as e:
+        print("Something went wrong while trying to connect to the Internet.")
+        print(e)
+        exit(1)
     else:
-        print("Te tytuły postów nie są unikalne:")
-        for duplicate in get_duplicates(titles):
-            print(duplicate)
+        assign_posts_to_users(users, posts)
 
-    print()
-    assign_closest_user_to_users(users)
-    for user in users:
-        print(user["username"], "mieszka najblizej uzytkownika:",
-              get_user_by_id(users, user["closestUserId"])["username"])
+        strings, status = get_users_posts_amount_string_list(users)
+        for string in strings:
+            print(string)
+
+        all_unique, titles = post_titles_unique(posts)
+        if all_unique:
+            print("Wszystkie tytuły postów są unikalne")
+        else:
+            print("Te tytuły postów nie są unikalne:")
+            for duplicate in get_duplicates(titles):
+                print(duplicate)
+
+        print()
+        assign_closest_user_to_users(users)
+        for user in users:
+            print(user["username"], "mieszka najblizej uzytkownika:",
+                  get_user_by_id(users, user["closestUserId"])["username"])
 
 
 if __name__ == '__main__':
