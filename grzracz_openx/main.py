@@ -166,6 +166,7 @@ def main(posts_url="https://jsonplaceholder.typicode.com/posts",
         for string in strings:
             print(string)
 
+        print()
         all_unique, titles = post_titles_unique(posts)
         if all_unique:
             print("Wszystkie tytuly postow sa unikalne")
