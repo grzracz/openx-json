@@ -7,7 +7,8 @@ Tests are included.
 
 Code coverage: **93%**
 
-Main code can be found at *grzracz_openx/main.py*, tests at *grzracz_openx/tests/test_main.py*
+Main code can be found at *[grzracz_openx/main.py](grzracz_openx/main.py)*, 
+tests at *[grzracz_openx/tests/test_main.py](grzracz_openx/tests/test_main.py)*
 
 #### Project installation:
 
