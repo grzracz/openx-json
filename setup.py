@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="openx-json-grzracz",
+    name="grzracz_openx",
     version="0.0.1",
     author="Grzegorz Raczek",
     author_email="grz.raczek@gmail.com",

@@ -1,8 +1,8 @@
-from urllib.request import urlopen
-from urllib.error import URLError
 import json
 from collections import defaultdict, Counter
 from numpy import unique, radians, sin, cos, arcsin, sqrt
+from urllib.request import urlopen
+from urllib.error import URLError
 
 
 def get_data_from_url(url):
@@ -16,7 +16,9 @@ def get_data_from_url(url):
         with urlopen(url) as url:
             return json.loads(url.read().decode())
     except URLError as e:
-        raise URLError("Can't connect to: " + str(url) + ' ' + str(e.reason))
+        raise URLError("Can't connect to: \"" + str(url) + "\", " + str(e.reason))
+    except ValueError as e:
+        raise ValueError("URL invalid: \"" + str(url) + "\", " + str(e))
 
 
 def get_user_by_id(users, user_id):
@@ -29,8 +31,8 @@ def get_user_by_id(users, user_id):
     """
     try:
         return next((user for user in users if user["id"] == user_id), None)
-    except KeyError as e:
-        raise KeyError("Error: Bad users list: Invalid key" + str(e))
+    except (KeyError, TypeError) as e:
+        raise KeyError("Error: Bad users list: " + str(e))
 
 
 def assign_posts_to_users(users, posts):
@@ -64,7 +66,7 @@ def get_users_posts_amount_string_list(users):
     no_errors = True
     for user in users:
         try:
-            string_list.append(str(user["username"]) + " napisał(a) " + str(len(user["posts"])) + " postów")
+            string_list.append(str(user["username"]) + " napisal(a) " + str(len(user["posts"])) + " postow")
         except KeyError as e:
             print("User invalid, ignoring:\n", user)
             print("Error: Invalid key", e)
@@ -82,7 +84,7 @@ def post_titles_unique(posts):
     try:
         post_titles = [post["title"] for post in posts]
         return unique(post_titles).size == len(posts), post_titles
-    except KeyError as e:
+    except (KeyError, TypeError) as e:
         raise KeyError("Error: Bad posts list: Invalid key" + str(e))
 
 
@@ -92,7 +94,7 @@ def get_duplicates(object_list):
     :param object_list: list of objects
     :return: list of duplicates
     """
-    return [item for item, count in Counter(object_list).items() if count > 1]
+    return [item for item, count in Counter(list(object_list)).items() if count > 1]
 
 
 def distance_Haversine(first_latitude, first_longitude, second_latitude, second_longitude):
@@ -148,14 +150,15 @@ def assign_closest_user_to_users(users):
     return no_errors
 
 
-def main(args=None):
+def main(posts_url="https://jsonplaceholder.typicode.com/posts",
+         users_url="https://jsonplaceholder.typicode.com/users"):
     try:
-        posts = get_data_from_url("https://jsonplaceholder.typicode.com/posts")
-        users = get_data_from_url("https://jsonplaceholder.typicode.com/users")
-    except URLError as e:
+        posts = get_data_from_url(posts_url)
+        users = get_data_from_url(users_url)
+    except (URLError, ValueError) as e:
         print("Something went wrong while trying to connect to the Internet.")
         print(e)
-        exit(1)
+        return False
     else:
         assign_posts_to_users(users, posts)
 
@@ -165,9 +168,9 @@ def main(args=None):
 
         all_unique, titles = post_titles_unique(posts)
         if all_unique:
-            print("Wszystkie tytuły postów są unikalne")
+            print("Wszystkie tytuly postow sa unikalne")
         else:
-            print("Te tytuły postów nie są unikalne:")
+            print("Te tytuly postow nie sa unikalne:")
             for duplicate in get_duplicates(titles):
                 print(duplicate)
 
@@ -176,7 +179,9 @@ def main(args=None):
         for user in users:
             print(user["username"], "mieszka najblizej uzytkownika:",
                   get_user_by_id(users, user["closestUserId"])["username"])
+    return True
 
 
 if __name__ == '__main__':
-    main()
+    if not main():
+        exit(1)
